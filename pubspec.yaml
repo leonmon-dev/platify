@@ -17,8 +17,8 @@ dependencies:
   pocketbase: ^0.23.0+1
   
   # Isar Community packages
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  isar_community: ^3.3.0
+  isar_community_flutter_libs: ^3.3.0
   path_provider: ^2.1.5
   provider: ^6.1.5+1
 
@@ -29,7 +29,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   # Isar Community code generator and build_runner
-  isar_generator: ^3.1.0+1
+  isar_community_generator: ^3.3.0
   build_runner: ^2.4.11
 
 flutter:

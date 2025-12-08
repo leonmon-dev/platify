@@ -1,5 +1,5 @@
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:platify/transaction_model.dart';
 
 part 'account_model.g.dart';

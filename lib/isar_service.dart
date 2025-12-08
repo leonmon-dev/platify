@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:platify/account_model.dart';
 import 'package:platify/transaction_model.dart';
