@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/account_model.dart';
-import 'package:myapp/isar_service.dart';
-import 'package:myapp/transaction_model.dart';
+import 'package:myapp/database.dart';
 import 'package:provider/provider.dart';
+import 'package:drift/drift.dart' as drift;
 
 class AddTransactionScreen extends StatefulWidget {
-  final Account account;
-
-  const AddTransactionScreen({super.key, required this.account});
+  final int accountId;
+  const AddTransactionScreen({super.key, required this.accountId});
 
   @override
   AddTransactionScreenState createState() => AddTransactionScreenState();
@@ -17,14 +15,15 @@ class AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
+  bool _isIncome = true;
 
   @override
   Widget build(BuildContext context) {
-    final isarService = Provider.of<IsarService>(context, listen: false);
+    final database = Provider.of<AppDatabase>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Transaction to ${widget.account.name}'),
+        title: const Text('Add Transaction'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -53,18 +52,43 @@ class AddTransactionScreenState extends State<AddTransactionScreen> {
                   return null;
                 },
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Expense'),
+                  Switch(
+                    value: _isIncome,
+                    onChanged: (value) {
+                      setState(() {
+                        _isIncome = value;
+                      });
+                    },
+                  ),
+                  const Text('Income'),
+                ],
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    final newTransaction = Transaction(
-                      description: _descriptionController.text,
-                      amount: double.parse(_amountController.text),
-                      date: DateTime.now(),
+                    final amount = double.parse(_amountController.text);
+                    final transaction = TransactionsCompanion(
+                      description: drift.Value(_descriptionController.text),
+                      amount: drift.Value(_isIncome ? amount : -amount),
+                      accountId: drift.Value(widget.accountId),
+                      date: drift.Value(DateTime.now()),
                     );
+                    database.addTransaction(transaction);
 
-                    isarService.saveTransaction(
-                        widget.account.uuid, newTransaction);
+                    // Update account balance
+                    database.getAccount(widget.accountId).then((account) {
+                      if (account != null) {
+                        final newBalance = account.balance + (_isIncome ? amount : -amount);
+                        final updatedAccount = account.copyWith(balance: newBalance);
+                        database.updateAccount(updatedAccount);
+                      }
+                    });
+
                     Navigator.pop(context);
                   }
                 },
@@ -75,5 +99,11 @@ class AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
       ),
     );
+  }
+}
+
+extension on AppDatabase {
+  Future<Account?> getAccount(int id) {
+    return (select(accounts)..where((a) => a.id.equals(id))).getSingleOrNull();
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/account_model.dart';
-import 'package:myapp/isar_service.dart';
+import 'package:myapp/database.dart';
 import 'package:provider/provider.dart';
+import 'package:drift/drift.dart' as drift;
 
 class AddAccountScreen extends StatefulWidget {
   const AddAccountScreen({super.key});
@@ -17,7 +17,7 @@ class AddAccountScreenState extends State<AddAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isarService = Provider.of<IsarService>(context, listen: false);
+    final database = Provider.of<AppDatabase>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -54,12 +54,11 @@ class AddAccountScreenState extends State<AddAccountScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    final newAccount = Account(
-                      name: _nameController.text,
-                      balance: double.parse(_balanceController.text),
+                    final account = AccountsCompanion(
+                      name: drift.Value(_nameController.text),
+                      balance: drift.Value(double.parse(_balanceController.text)),
                     );
-
-                    isarService.saveAccount(newAccount);
+                    database.addAccount(account);
                     Navigator.pop(context);
                   }
                 },

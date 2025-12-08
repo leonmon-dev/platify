@@ -1,26 +1,8 @@
-import 'package:isar/isar.dart';
-import 'package:myapp/transaction_model.dart';
-import 'package:uuid/uuid.dart';
+import 'package:drift/drift.dart';
 
-part 'account_model.g.dart';
-
-@collection
-class Account {
-  Id id = Isar.autoIncrement;
-
-  @Index(unique: true, replace: true)
-  late String uuid;
-
-  late String name;
-  late double balance;
-
-  @Backlink(to: 'account')
-  final transactions = IsarLinks<Transaction>();
-
-  Account({
-    required this.name,
-    required this.balance,
-  }) {
-    uuid = const Uuid().v4();
-  }
+@DataClassName('Account')
+class Accounts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  RealColumn get balance => real()();
 }
