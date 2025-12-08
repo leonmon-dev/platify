@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:platify/account_model.dart';
 import 'package:platify/isar_service.dart';
@@ -55,9 +54,10 @@ class AddAccountScreenState extends State<AddAccountScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    final newAccount = Account()
-                      ..name = _nameController.text
-                      ..balance = double.parse(_balanceController.text);
+                    final newAccount = Account(
+                      name: _nameController.text,
+                      balance: double.parse(_balanceController.text),
+                    );
 
                     isarService.saveAccount(newAccount);
                     Navigator.pop(context);

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:platify/account_model.dart';
 import 'package:platify/isar_service.dart';
@@ -58,12 +57,14 @@ class AddTransactionScreenState extends State<AddTransactionScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    final newTransaction = Transaction()
-                      ..description = _descriptionController.text
-                      ..amount = double.parse(_amountController.text)
-                      ..date = DateTime.now();
+                    final newTransaction = Transaction(
+                      description: _descriptionController.text,
+                      amount: double.parse(_amountController.text),
+                      date: DateTime.now(),
+                    );
 
-                    isarService.saveTransaction(widget.account, newTransaction);
+                    isarService.saveTransaction(
+                        widget.account.uuid, newTransaction);
                     Navigator.pop(context);
                   }
                 },

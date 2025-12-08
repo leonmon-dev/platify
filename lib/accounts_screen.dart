@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:platify/account_model.dart';
 import 'package:platify/add_account_screen.dart';
@@ -24,9 +23,43 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isarService = Provider.of<IsarService>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Accounts'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_forever),
+            tooltip: 'Clear Database',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Confirm'),
+                    content: const Text(
+                        'Are you sure you want to delete all data? This action cannot be undone.'),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Cancel'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Delete'),
+                        onPressed: () {
+                          isarService.cleanDb();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<Account>>(
         stream: _accountStream,
@@ -49,7 +82,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
               final account = accounts[index];
               return ListTile(
                 title: Text(account.name),
-                subtitle: Text('Balance: \$${account.balance.toStringAsFixed(2)}'),
+                subtitle:
+                    Text('Balance: \$${account.balance.toStringAsFixed(2)}'),
                 onTap: () {
                   // Navigate to transaction details screen (to be implemented)
                 },

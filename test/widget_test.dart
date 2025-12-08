@@ -1,13 +1,19 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:platify/isar_service.dart';
 import 'package:platify/main.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   testWidgets('App starts without errors', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    final isarService = IsarService();
-    await tester.pumpWidget(MyApp(isarService: isarService));
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => IsarService()),
+        ],
+        child: const MyApp(),
+      ),
+    );
 
     // You can add more specific tests here in the future.
     expect(find.text('Accounts'), findsOneWidget);

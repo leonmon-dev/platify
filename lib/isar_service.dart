@@ -1,5 +1,4 @@
-
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:platify/account_model.dart';
@@ -27,31 +26,63 @@ class IsarService extends ChangeNotifier {
 
   Future<void> saveAccount(Account newAccount) async {
     final isar = await db;
-    isar.writeTxnSync<int>(() => isar.collection<Account>().putSync(newAccount));
+    isar.writeTxnSync<int>(() => isar.accounts.putSync(newAccount));
     notifyListeners();
   }
 
   Future<void> saveTransaction(
-      Account account, Transaction newTransaction) async {
+      String accountUuid, Transaction newTransaction) async {
     final isar = await db;
-    account.balance += newTransaction.amount;
-    isar.writeTxnSync<int>(
-        () => isar.collection<Transaction>().putSync(newTransaction));
 
-    isar.writeTxnSync(() async {
-      account.transactions.add(newTransaction);
-      await account.transactions.save();
+    final account = await isar.accounts
+        .where()
+        .filter()
+        .uuidEqualTo(accountUuid)
+        .findFirst();
+
+    if (account != null) {
+      await isar.writeTxn(() async {
+        await isar.transactions.put(newTransaction);
+        await account.transactions.load();
+        account.transactions.add(newTransaction);
+        await account.transactions.save();
+        account.balance += newTransaction.amount;
+        await isar.accounts.put(account);
+      });
+    }
+
+    notifyListeners();
+  }
+
+  Future<Account?> getAccountByUuid(String uuid) async {
+    final isar = await db;
+    return await isar.accounts.where().filter().uuidEqualTo(uuid).findFirst();
+  }
+
+  Future<void> deleteAccount(String uuid) async {
+    final isar = await db;
+    await isar.writeTxn(() async {
+      final account =
+          await isar.accounts.where().filter().uuidEqualTo(uuid).findFirst();
+      if (account != null) {
+        await isar.accounts.delete(account.id);
+      }
     });
     notifyListeners();
   }
 
   Future<List<Account>> getAllAccounts() async {
     final isar = await db;
-    return await isar.collection<Account>().where().findAll();
+    return await isar.accounts.where().findAll();
   }
 
   Stream<List<Account>> listenToAccounts() async* {
     final isar = await db;
-    yield* isar.collection<Account>().where().watch(fireImmediately: true);
+    yield* isar.accounts.where().watch(fireImmediately: true);
+  }
+
+  Future<void> cleanDb() async {
+    final isar = await db;
+    await isar.writeTxn(() async => await isar.clear());
   }
 }

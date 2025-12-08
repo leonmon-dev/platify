@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:platify/isar_service.dart';
@@ -86,7 +85,8 @@ class _MovementsScreenState extends State<MovementsScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.attach_money),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor, ingresa un monto';
@@ -118,12 +118,14 @@ class _MovementsScreenState extends State<MovementsScreen> {
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     final amount = double.parse(_amountController.text);
-                    final transaction = Transaction()
-                      ..amount = _isIncome ? amount : -amount
-                      ..date = DateTime.now()
-                      ..description = _descriptionController.text;
+                    final transaction = Transaction(
+                      amount: _isIncome ? amount : -amount,
+                      date: DateTime.now(),
+                      description: _descriptionController.text,
+                    );
 
-                    isarService.saveTransaction(_selectedAccount!, transaction);
+                    isarService.saveTransaction(
+                        _selectedAccount!.uuid, transaction);
 
                     Navigator.pop(context);
                   }

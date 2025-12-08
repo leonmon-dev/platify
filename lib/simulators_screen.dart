@@ -58,10 +58,11 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
       final rawInterest =
           double.tryParse(_interestController.text.replaceAll(',', '.')) ?? 0.0;
       final insuranceValue =
-          double.tryParse(_insuranceController.text.replaceAll(',', '.')) ?? 0.0;
+          double.tryParse(_insuranceController.text.replaceAll(',', '.')) ??
+              0.0;
       final fixedInstallment =
           double.tryParse(_installmentController.text.replaceAll(',', '.')) ??
-          0.0;
+              0.0;
 
       if (months <= 0 || creditValue <= 0.0) {
         setState(() {
@@ -88,8 +89,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
           monthlyPayment = (creditValue / months) + insuranceValue;
         } else {
           final factor = pow(1 + monthlyRate, months);
-          monthlyPayment =
-              (creditValue * monthlyRate * factor) / (factor - 1) +
+          monthlyPayment = (creditValue * monthlyRate * factor) / (factor - 1) +
               insuranceValue;
         }
       }
@@ -154,215 +154,222 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Simulador de Crédito',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _monthsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Cantidad de meses',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Este campo es obligatorio';
-                      }
-                      return null;
-                    },
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Simulador de Crédito',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _monthsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Cantidad de meses',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _installmentController,
-                    decoration: const InputDecoration(
-                      labelText: 'Valor de la cuota (opcional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Este campo es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _installmentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor de la cuota (opcional)',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _creditController,
-                    decoration: const InputDecoration(
-                      labelText: 'Valor del crédito',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Este campo es obligatorio';
-                      }
-                      return null;
-                    },
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _insuranceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Valor de seguro (opcional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _creditController,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor del crédito',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _interestController,
-                    decoration: const InputDecoration(
-                      labelText: 'Porcentaje interés',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Este campo es obligatorio';
-                      }
-                      return null;
-                    },
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: _interestType,
-                    decoration: const InputDecoration(
-                      labelText: 'Tipo de interés',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _interestTypes.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _interestType = newValue!;
-                      });
-                    },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Este campo es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _insuranceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Valor de seguro (opcional)',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _simulate,
-                    child: const Text('Simular'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                ],
-              ),
-            ),
-            if (_payments.isNotEmpty) ...[
-              const SizedBox(height: 30),
-              const Text(
-                'Tabla de Pagos',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('Mes')),
-                    DataColumn(label: Text('Capital')),
-                    DataColumn(label: Text('Interés')),
-                    DataColumn(label: Text('Seguro')),
-                    DataColumn(label: Text('Total')),
-                    DataColumn(label: Text('Saldo')),
-                  ],
-                  rows: _getCurrentPagePayments().map((payment) {
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(payment.month.toString())),
-                        DataCell(Text(_currencyFormat.format(payment.principal.round()))),
-                        DataCell(Text(_currencyFormat.format(payment.interest.round()))),
-                        DataCell(Text(_currencyFormat.format(payment.insurance.round()))),
-                        DataCell(Text(_currencyFormat.format(payment.totalPayment.round()))),
-                        DataCell(
-                          Text(_currencyFormat.format(payment.remainingBalance.round())),
-                        ),
-                      ],
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _interestController,
+                  decoration: const InputDecoration(
+                    labelText: 'Porcentaje interés',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Este campo es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _interestType,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de interés',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _interestTypes.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
                     );
                   }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _interestType = newValue!;
+                    });
+                  },
                 ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: _currentPage > 0
-                        ? () => setState(() => _currentPage--)
-                        : null,
-                  ),
-                  Text(
-                    'Página ${_currentPage + 1} de ${(_payments.length / _itemsPerPage).ceil()}',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward),
-                    onPressed:
-                        (_currentPage + 1) * _itemsPerPage < _payments.length
-                        ? () => setState(() => _currentPage++)
-                        : null,
-                  ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _simulate,
+                  child: const Text('Simular'),
+                ),
+              ],
+            ),
+          ),
+          if (_payments.isNotEmpty) ...[
+            const SizedBox(height: 30),
+            const Text(
+              'Tabla de Pagos',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text('Mes')),
+                  DataColumn(label: Text('Capital')),
+                  DataColumn(label: Text('Interés')),
+                  DataColumn(label: Text('Seguro')),
+                  DataColumn(label: Text('Total')),
+                  DataColumn(label: Text('Saldo')),
                 ],
-              ),
-              const SizedBox(height: 30),
-              const Text(
-                'Resumen',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Valor del préstamo:'),
-                          Text('\$${_currencyFormat.format(_loanAmount.round())}'),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Cantidad total pagada:'),
-                          Text('\$${_currencyFormat.format(_totalPaid.round())}'),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Intereses pagados:'),
-                          Text('\$${_currencyFormat.format(_totalInterest.round())}'),
-                        ],
+                rows: _getCurrentPagePayments().map((payment) {
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(payment.month.toString())),
+                      DataCell(Text(
+                          _currencyFormat.format(payment.principal.round()))),
+                      DataCell(Text(
+                          _currencyFormat.format(payment.interest.round()))),
+                      DataCell(Text(
+                          _currencyFormat.format(payment.insurance.round()))),
+                      DataCell(Text(_currencyFormat
+                          .format(payment.totalPayment.round()))),
+                      DataCell(
+                        Text(_currencyFormat
+                            .format(payment.remainingBalance.round())),
                       ),
                     ],
-                  ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _currentPage > 0
+                      ? () => setState(() => _currentPage--)
+                      : null,
+                ),
+                Text(
+                  'Página ${_currentPage + 1} de ${(_payments.length / _itemsPerPage).ceil()}',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward),
+                  onPressed:
+                      (_currentPage + 1) * _itemsPerPage < _payments.length
+                          ? () => setState(() => _currentPage++)
+                          : null,
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'Resumen',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Valor del préstamo:'),
+                        Text(
+                            '\$${_currencyFormat.format(_loanAmount.round())}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Cantidad total pagada:'),
+                        Text('\$${_currencyFormat.format(_totalPaid.round())}'),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Intereses pagados:'),
+                        Text(
+                            '\$${_currencyFormat.format(_totalInterest.round())}'),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 
   @override
