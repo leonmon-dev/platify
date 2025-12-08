@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:platify/isar_service.dart';
-import 'package:platify/main.dart';
+import 'package:myapp/isar_service.dart';
+import 'package:myapp/main.dart';
 import 'package:provider/provider.dart';
 
 void main() {

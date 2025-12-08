@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:platify/accounts_screen.dart';
-import 'package:platify/isar_service.dart';
+import 'package:myapp/accounts_screen.dart';
+import 'package:myapp/isar_service.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final isarService = IsarService();
+  await isarService.db; 
+
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => IsarService()),
-      ],
+    ChangeNotifierProvider.value(
+      value: isarService,
       child: const MyApp(),
     ),
   );
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Platify',
+      title: 'My App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         textTheme: GoogleFonts.latoTextTheme(

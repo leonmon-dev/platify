@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:platify/isar_service.dart';
-import 'package:platify/account_model.dart';
-import 'package:platify/transaction_model.dart';
+import 'package:myapp/isar_service.dart';
+import 'package:myapp/account_model.dart';
+import 'package:myapp/transaction_model.dart';
 
 class MovementsScreen extends StatefulWidget {
   const MovementsScreen({super.key});

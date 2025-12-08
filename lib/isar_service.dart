@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:isar_community/isar.dart';
+import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:platify/account_model.dart';
-import 'package:platify/transaction_model.dart';
+import 'package:myapp/account_model.dart';
+import 'package:myapp/transaction_model.dart';
 
 class IsarService extends ChangeNotifier {
   late Future<Isar> db;
@@ -17,7 +17,6 @@ class IsarService extends ChangeNotifier {
       return await Isar.open(
         [AccountSchema, TransactionSchema],
         directory: dir.path,
-        inspector: true,
       );
     }
 
@@ -41,11 +40,11 @@ class IsarService extends ChangeNotifier {
         .findFirst();
 
     if (account != null) {
+      newTransaction.account.value = account;
       await isar.writeTxn(() async {
         await isar.transactions.put(newTransaction);
-        await account.transactions.load();
-        account.transactions.add(newTransaction);
-        await account.transactions.save();
+        await newTransaction.account.save();
+
         account.balance += newTransaction.amount;
         await isar.accounts.put(account);
       });

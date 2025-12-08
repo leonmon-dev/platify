@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:platify/account_model.dart';
-import 'package:platify/add_account_screen.dart';
-import 'package:platify/isar_service.dart';
+import 'package:myapp/account_model.dart';
+import 'package:myapp/add_account_screen.dart';
+import 'package:myapp/isar_service.dart';
 import 'package:provider/provider.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -82,8 +82,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
               final account = accounts[index];
               return ListTile(
                 title: Text(account.name),
-                subtitle:
-                    Text('Balance: \$${account.balance.toStringAsFixed(2)}'),
+                subtitle: Text(
+                    'Balance: \$${account.balance.toStringAsFixed(2)}'),
                 onTap: () {
                   // Navigate to transaction details screen (to be implemented)
                 },
