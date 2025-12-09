@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Informes',
+            label: 'Resumen',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.show_chart),

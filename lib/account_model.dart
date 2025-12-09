@@ -1,13 +1,9 @@
-class Account {
-  String id;
-  String name;
-  String type;
-  double initialAmount;
+import 'package:drift/drift.dart';
 
-  Account({
-    required this.id,
-    required this.name,
-    required this.type,
-    required this.initialAmount,
-  });
+@DataClassName('Account')
+class Accounts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 50)();
+  TextColumn get type => text()();
+  RealColumn get initialAmount => real()();
 }

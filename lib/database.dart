@@ -10,7 +10,21 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 4;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (m, from, to) async {
+        // Estrategia de migración simple que elimina todas las tablas y las vuelve a crear.
+        // ADVERTENCIA: Esto eliminará todos los datos existentes.
+        for (final table in allTables) {
+          await m.deleteTable(table.actualTableName);
+          await m.createTable(table);
+        }
+      },
+    );
+  }
 
   // Methods for accounts
   Future<List<Account>> getAllAccounts() => select(accounts).get();
@@ -32,4 +46,14 @@ class AppDatabase extends _$AppDatabase {
   }
   Future updateTransaction(Transaction entry) => update(transactions).replace(entry);
   Future deleteTransaction(Transaction entry) => delete(transactions).delete(entry);
+
+  // Method to calculate account balance
+  Stream<double> watchAccountBalance(int accountId) {
+    return customSelect(
+      'SELECT a.initial_amount + IFNULL(SUM(t.amount), 0) as balance FROM accounts a LEFT JOIN transactions t ON t.account_id = a.id WHERE a.id = ? GROUP BY a.id',
+      variables: [Variable.withInt(accountId)],
+      readsFrom: {accounts, transactions},
+    ).watchSingle()
+    .map((row) => row.read<double>('balance'));
+  }
 }

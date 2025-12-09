@@ -1,86 +1,117 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/add_transaction_screen.dart';
-import 'package:myapp/database.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class MovementsScreen extends StatelessWidget {
-  final int accountId;
+import 'database.dart';
+import 'add_transaction_screen.dart';
 
-  const MovementsScreen({super.key, required this.accountId});
+class MovementsScreen extends StatelessWidget {
+  final Account account;
+
+  const MovementsScreen({super.key, required this.account});
 
   @override
   Widget build(BuildContext context) {
-    final database = Provider.of<AppDatabase>(context);
+    final db = Provider.of<AppDatabase>(context);
+    final formatCurrency = NumberFormat.simpleCurrency(decimalDigits: 2);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Movements'),
+        title: Text(account.name),
+        centerTitle: true,
       ),
       body: Column(
         children: [
-          FutureBuilder<Account?>(
-            future: (database.select(database.accounts)..where((a) => a.id.equals(accountId))).getSingleOrNull(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              final account = snapshot.data!;
-              return Padding(
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              elevation: 4,
+              child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      account.name,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    Text(
-                      'Current Balance: \$${account.balance.toStringAsFixed(2)}',
-                       style: Theme.of(context).textTheme.titleMedium,
+                    const Text('Saldo Actual', style: TextStyle(fontSize: 20, color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    StreamBuilder<double>(
+                      stream: db.watchAccountBalance(account.id),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Text(formatCurrency.format(account.initialAmount),
+                              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
+                        }
+                        return Text(formatCurrency.format(snapshot.data!),
+                            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold));
+                      },
                     ),
                   ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
-          const Divider(),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Divider(),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Historial de Movimientos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
           Expanded(
             child: StreamBuilder<List<Transaction>>(
-              stream: database.watchTransactionsForAccount(accountId),
+              stream: db.watchTransactionsForAccount(account.id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No transactions for this account yet.'));
+                  return const Center(
+                    child: Text(
+                      'No hay movimientos todavía.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
                 }
-
                 final transactions = snapshot.data!;
-
                 return ListView.builder(
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
                     final transaction = transactions[index];
                     final isIncome = transaction.amount > 0;
-                    return ListTile(
-                      leading: Icon(
-                        isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                        color: isIncome ? Colors.green : Colors.red,
-                      ),
-                      title: Text(transaction.description),
-                      subtitle: Text(transaction.date.toLocal().toString().split(' ')[0]),
-                      trailing: Text(
-                        '${isIncome ? '+' : ''}\$${transaction.amount.toStringAsFixed(2)}',
-                        style: TextStyle(
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      child: ListTile(
+                        leading: Icon(
+                          isIncome ? Icons.arrow_upward : Icons.arrow_downward,
                           color: isIncome ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
                         ),
+                        title: Text(transaction.description),
+                        subtitle: Text(DateFormat.yMMMd().format(transaction.date)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formatCurrency.format(transaction.amount),
+                              style: TextStyle(
+                                color: isIncome ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                              onPressed: () => _deleteTransaction(context, db, transaction),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => Padding(
+                              padding: MediaQuery.of(context).viewInsets,
+                              child: AddTransactionScreen(account: account, transaction: transaction),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
@@ -90,17 +121,45 @@ class MovementsScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text("Nuevo Movimiento"),
         onPressed: () {
-           Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(accountId: accountId),
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: AddTransactionScreen(account: account),
             ),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _deleteTransaction(BuildContext context, AppDatabase db, Transaction transaction) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Eliminación'),
+        content: Text('¿Seguro que quieres eliminar el movimiento "${transaction.description}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await db.deleteTransaction(transaction);
+      scaffoldMessenger
+        ..removeCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Movimiento eliminado')));
+    }
   }
 }

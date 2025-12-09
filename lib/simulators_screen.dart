@@ -37,7 +37,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
   final _interestController = TextEditingController();
 
   String _interestType = 'Efectivo anual';
-  List<PaymentRecord> _payments = [];
+  final List<PaymentRecord> _payments = [];
   int _currentPage = 0;
   static const int _itemsPerPage = 10;
 
@@ -50,8 +50,6 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
   final NumberFormat _currencyFormat = NumberFormat('#,##0', 'es_CO');
 
   void _simulate() {
-    // --- 1. LECTURA Y VALIDACIÓN DE ENTRADAS (MÁS SEGURO) ---
-    // MEJORA: Usamos tryParse para evitar errores si el campo está vacío o es inválido.
     final months = int.tryParse(_monthsController.text) ?? 0;
     final creditValue =
         double.tryParse(_creditController.text.replaceAll(',', '.')) ?? 0.0;
@@ -63,42 +61,30 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
         double.tryParse(_installmentController.text.replaceAll(',', '.')) ??
         0.0;
 
-    // MEJORA: Validación temprana para evitar cálculos innecesarios o errores.
     if (months <= 0 || creditValue <= 0.0) {
-      // Puedes mostrar un error al usuario aquí
       setState(() {
         _payments.clear();
         _totalPaid = 0;
         _totalInterest = 0;
       });
-      return; // Detiene la ejecución si no hay datos válidos
+      return;
     }
 
-    // --- 2. CÁLCULO DE TASAS (CORREGIDO) ---
-    final annualDecimalRate = rawInterest / 100.0; // ej: 10% -> 0.10
-
+    final annualDecimalRate = rawInterest / 100.0;
     double monthlyRate;
     if (_interestType == 'Efectivo anual') {
-      // *** FIJO #1: Corrección financiera crítica ***
-      // Esta es la fórmula correcta para convertir E.A. a Efectiva Mensual (E.M.)
       monthlyRate = pow(1 + annualDecimalRate, (1 / 12)) - 1;
     } else {
-      // Asumo que la otra opción es 'Nominal Anual' (que se paga mensual)
-      // Tu código original (rate / 12) es para 'Nominal Anual', no 'Efectivo Anual'.
       monthlyRate = annualDecimalRate / 12;
     }
 
-    // --- 3. CÁLCULO DE CUOTA (MÁS SEGURO) ---
     double monthlyPayment;
     if (fixedInstallment > 0) {
-      // El usuario proporcionó una cuota fija
       monthlyPayment = fixedInstallment;
     } else {
-      // MEJORA: Maneja el caso de interés 0 para evitar división por cero (NaN)
       if (monthlyRate == 0.0) {
         monthlyPayment = (creditValue / months) + insuranceValue;
       } else {
-        // Fórmula de cuota fija (amortización francesa)
         final factor = pow(1 + monthlyRate, months);
         monthlyPayment =
             (creditValue * monthlyRate * factor) / (factor - 1) +
@@ -106,8 +92,6 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
       }
     }
 
-    // --- 4. GENERACIÓN DE LA TABLA DE AMORTIZACIÓN ---
-    // Limpiamos los resultados anteriores
     setState(() {
       _payments.clear();
       _loanAmount = creditValue;
@@ -117,57 +101,36 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
       double remainingBalance = creditValue;
 
       for (int month = 1; month <= months; month++) {
-        // 1. Calcular pagos del mes
+        if (remainingBalance <= 0.01) { // Prevents extra rows due to floating point inaccuracies
+          break;
+        }
+
         final interestPayment = remainingBalance * monthlyRate;
+        double principalPayment = monthlyPayment - insuranceValue - interestPayment;
+        double totalPaymentForMonth = monthlyPayment;
 
-        // El pago total sin seguro es la cuota fija menos el seguro
-        final paymentWithoutInsurance = monthlyPayment - insuranceValue;
-
-        // El abono a capital es lo que queda de la cuota tras pagar intereses
-        double principalPayment = paymentWithoutInsurance - interestPayment;
-
-        // 2. Ajuste para el último pago
-        // Si el abono a capital es mayor que el saldo, ajústalo.
         if (principalPayment > remainingBalance) {
           principalPayment = remainingBalance;
+          totalPaymentForMonth = principalPayment + interestPayment + insuranceValue;
         }
 
-        // Si el saldo ya es 0 o negativo, no calcules más
-        if (remainingBalance <= 0) {
-          principalPayment = 0;
-          // Si quieres que pare de generar filas cuando llega a 0
-          // break;
-        }
-
-        // 3. Recalcular el pago total (importante para la última cuota)
-        final totalPayment =
-            principalPayment + interestPayment + insuranceValue;
-
-        // 4. Actualizar el saldo
         remainingBalance -= principalPayment;
 
-        // Asegurarse de que el saldo final no sea negativo (por centavos)
         final finalBalance = remainingBalance > 0 ? remainingBalance : 0.0;
 
-        // 5. Guardar registro y sumar totales
         _payments.add(
           PaymentRecord(
             month: month,
             principal: principalPayment,
             interest: interestPayment,
             insurance: insuranceValue,
-            totalPayment: totalPayment,
+            totalPayment: totalPaymentForMonth,
             remainingBalance: finalBalance,
           ),
         );
 
-        _totalPaid += totalPayment;
+        _totalPaid += totalPaymentForMonth;
         _totalInterest += interestPayment;
-
-        // Si el saldo llegó a 0, no sigas iterando
-        if (finalBalance == 0.0) {
-          break;
-        }
       }
     });
   }
@@ -221,7 +184,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
                       labelText: 'Valor de la cuota (opcional)',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
@@ -232,7 +195,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
                       labelText: 'Valor del crédito',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     validator: (value) {
@@ -249,7 +212,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
                       labelText: 'Valor de seguro (opcional)',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
@@ -260,7 +223,7 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
                       labelText: 'Porcentaje interés',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     validator: (value) {
@@ -272,11 +235,11 @@ class _SimulatorsScreenState extends State<SimulatorsScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _interestType,
                     decoration: const InputDecoration(
                       labelText: 'Tipo de interés',
                       border: OutlineInputBorder(),
                     ),
+                    initialValue: _interestType,
                     items: _interestTypes.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
