@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:myapp/add_account_screen.dart';
 import 'package:myapp/database.dart';
@@ -12,64 +13,65 @@ class AccountsScreen extends StatefulWidget {
 }
 
 class _AccountsScreenState extends State<AccountsScreen> {
-  late AppDatabase _database;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _database = Provider.of<AppDatabase>(context);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final db = Provider.of<AppDatabase>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Accounts'),
+        title: const Text('Cuentas'),
       ),
       body: StreamBuilder<List<Account>>(
-        stream: _database.watchAllAccounts(),
+        stream: db.watchAllAccounts(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No accounts yet.'));
-          }
+          final accounts = snapshot.data ?? [];
 
-          final accounts = snapshot.data!;
+          if (accounts.isEmpty) {
+            return const Center(
+              child: Text('No hay cuentas. ¡Agrega una!'),
+            );
+          }
 
           return ListView.builder(
             itemCount: accounts.length,
             itemBuilder: (context, index) {
               final account = accounts[index];
-              return ListTile(
-                title: Text(account.name),
-                subtitle: Text(
-                    'Balance: \$${account.balance.toStringAsFixed(2)}'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MovementsScreen(accountId: account.id),
-                    ),
-                  );
-                },
+              return Card(
+                margin: const EdgeInsets.all(8.0),
+                child: ListTile(
+                  title: Text(account.name, style: const TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    'Balance: \${account.balance.toStringAsFixed(2)}',
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MovementsScreen(accountId: account.id),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddAccountScreen()),
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (BuildContext context) {
+              return Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: const AddAccountScreen(),
+              );
+            },
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

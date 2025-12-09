@@ -12,12 +12,13 @@ dependencies:
   cupertino_icons: ^1.0.6
   provider: ^6.1.2
   google_fonts: ^6.2.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   uuid: ^4.4.0
   path_provider: ^2.1.5
   drift: ^2.30.0
   sqlite3_flutter_libs: ^0.5.41
   path: ^1.9.1
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

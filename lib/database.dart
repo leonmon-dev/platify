@@ -1,17 +1,13 @@
-
 import 'package:drift/drift.dart';
-import 'dart:io';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:myapp/account_model.dart';
 import 'package:myapp/transaction_model.dart';
+import 'database.io.dart' if (dart.library.html) 'database.web.dart';
 
 part 'database.g.dart';
 
 @DriftDatabase(tables: [Accounts, Transactions])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(openConnection());
 
   @override
   int get schemaVersion => 1;
@@ -36,12 +32,4 @@ class AppDatabase extends _$AppDatabase {
   }
   Future updateTransaction(Transaction entry) => update(transactions).replace(entry);
   Future deleteTransaction(Transaction entry) => delete(transactions).delete(entry);
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'db.sqlite'));
-    return NativeDatabase(file);
-  });
 }

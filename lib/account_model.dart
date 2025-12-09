@@ -1,8 +1,13 @@
-import 'package:drift/drift.dart';
+class Account {
+  String id;
+  String name;
+  String type;
+  double initialAmount;
 
-@DataClassName('Account')
-class Accounts extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text()();
-  RealColumn get balance => real()();
+  Account({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.initialAmount,
+  });
 }
